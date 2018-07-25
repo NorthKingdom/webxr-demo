@@ -120,8 +120,11 @@ class App {
       preserveDrawingBuffer: true,
     });
     this.renderer.autoClear = false;
-
     this.gl = this.renderer.getContext();
+
+    // Enable shadows on the renderer
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Ensure that the context we want to write to is compatible
     // with our XRDevice
@@ -136,14 +139,11 @@ class App {
 
     DemoUtils.fixFramebuffer(this);
 
-    /*
-    const geometry = new THREE.BoxBufferGeometry(0.5, 0.5, 0.5);
-    const material = new THREE.MeshNormalMaterial();
-    geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.25, 0));
-    this.model = new THREE.Mesh(geometry, material);
-    */
+    // Loading 3D object
     DemoUtils.loadModel(MODEL_OBJ_URL, MODEL_MTL_URL).then(model => {
       this.model = model;
+      // Set all meshes contained in the model to cast a shadow
+      this.model.children.forEach(mesh => mesh.castShadow = true);
       this.model.scale.set(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
     });
 
@@ -182,8 +182,12 @@ class App {
       const hitMatrix = new THREE.Matrix4().fromArray(hit.hitMatrix);
 
       this.model.position.setFromMatrixPosition(hitMatrix);
-      
+
       DemoUtils.lookAtOnY(this.model, this.camera);
+
+      // Find a surface and apply shadow
+      const shadowMesh = this.scene.children.find(c => c.name === 'shadowMesh');
+      shadowMesh.position.y = this.model.position.y;
 
       this.scene.add(this.model);
     }
