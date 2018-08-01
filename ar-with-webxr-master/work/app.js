@@ -17,17 +17,17 @@
  * Container class to manage connecting to the WebXR Device API
  * and handle rendering on every frame.
  */
-const MODEL_OBJ_URL = '../assets/ArcticFox_Posed.obj';
-const MODEL_MTL_URL = '../assets/ArcticFox_Posed.mtl';
-const MODEL_SCALE = 0.1;
+
+const MODEL_OBJ_URL = '../assets/Tennis_Ball.obj';
+const MODEL_MTL_URL = '../assets/Tennis_Ball.mtl';
+const MODEL_SCALE = 0.5;
 
 class App {
   constructor() {
     this.onXRFrame = this.onXRFrame.bind(this);
     this.onEnterAR = this.onEnterAR.bind(this);
-
     this.init();
-    this.onClick = this.onClick.bind(this);;
+    this.onClick = this.onClick.bind(this);
   }
 
   /**
@@ -108,6 +108,7 @@ class App {
    * XRSession and kick off the render loop.
    */
   async onSessionStarted(session) {
+    console.log("started");
     this.session = session;
 
     // Add the `ar` class to our body, which will hide our 2D components
@@ -135,6 +136,8 @@ class App {
     this.session.baseLayer = new XRWebGLLayer(this.session, this.gl);
 
     // Creates a THRE.Scene with lights included
+
+    // this.scene = new THREE.Scene();
     this.scene = DemoUtils.createLitScene();
 
     DemoUtils.fixFramebuffer(this);
@@ -145,9 +148,11 @@ class App {
       // Set all meshes contained in the model to cast a shadow
       this.model.children.forEach(mesh => mesh.castShadow = true);
       this.model.scale.set(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
+      //this.model.position.set(1.0, 1.0, 1.0);
+      
     });
 
-
+    
     // We'll update the camera matrices directly from API, so
     // disable matrix auto updates so three.js doesn't attempt
     // to handle the matrices independently.
@@ -162,7 +167,9 @@ class App {
 
     window.addEventListener('click', this.onClick);
   }
+  
   async onClick(e) {
+    
     if (!this.model) {
       return;
     }
@@ -188,8 +195,19 @@ class App {
       // Find a surface and apply shadow
       const shadowMesh = this.scene.children.find(c => c.name === 'shadowMesh');
       shadowMesh.position.y = this.model.position.y;
-
       this.scene.add(this.model);
+      const anim = anime({
+          targets    : this.model.position,
+          y          : this.model.position.y + 0.1,
+          direction  : "alternate",
+          duration   : 500,
+          loop       : true,
+          easing     : "easeInOutQuart",
+          elasticity : 300,
+          update     : (element) => {
+              this.model.position.y = element.animatables[0].target.y;
+          }
+      });
     }
   }
 
